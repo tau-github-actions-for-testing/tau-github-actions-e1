@@ -1,0 +1,27 @@
+name: build_by_api
+run-name: Build by API from user @${{ github.actor }}
+
+on:
+    repository_dispatch:
+        types: api-build
+
+jobs:
+    build:
+        name: Build Job
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Run Unit tests
+              run: mvn test
+
+            - name: Building with Maven
+              run: mvn -DskipTets -B package --no-transfer-progress --file ./pom.xml
+
+            - name: rename Artifact
+              run: mv ./target/*digitalbank*.war "./target/${{ github.event.client_payload.artifactName }}.war"
+
+            - uses: actions/upload-artifact@master
+              with:
+                name: ${{ github.event.client_payload.artifactName }}.war
+                path: /target/*.war
